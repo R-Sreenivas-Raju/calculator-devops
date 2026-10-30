@@ -1,0 +1,97 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────────────────────────────
+# SPE Mini-Project — Docker Compose Stack
+#
+# Services:
+#   1. calculator  — Spring Boot Calculator REST API
+#   2. nginx       — Nginx reverse proxy in front of the calculator
+#
+# Architecture:
+#   Client → Nginx (port 80) → calculator:8080
+#
+# Why Nginx? It acts as a reverse proxy:
+#   - Hides the backend port (8080) from the outside world
+#   - Can load-balance if we add more replicas
+#   - Handles SSL termination in production
+# ─────────────────────────────────────────────────────────────────────────────
+
+services:
+
+  # ── Service 1: Spring Boot Calculator API ───────────────────────────────────
+  calculator:
+    image: ${DOCKER_IMAGE:-calculator-api:latest}
+    container_name: calculator-api
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    # Environment variables — configure the app without rebuilding the image
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+      - SERVER_PORT=8080
+      - JAVA_OPTS=-Xms256m -Xmx512m
+
+    # Port mapping: host:container (only accessible via Nginx externally)
+    # We expose 8080 on the host too for direct debugging
+    ports:
+      - "8080:8080"
+
+    # Health check using Spring Actuator — Docker monitors this
+    # --interval: check every 30 seconds
+    # --timeout: wait max 10 seconds for response
+    # --start-period: give Spring Boot 40 seconds to start up before checking
+    # --retries: mark unhealthy after 3 consecutive failures
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      start-period: 40s
+      retries: 3
+
+    # Restart policy: restart automatically unless manually stopped
+    restart: unless-stopped
+
+    # Connect to the custom network
+    networks:
+      - calculator-network
+
+  # ── Service 2: Nginx Reverse Proxy ──────────────────────────────────────────
+  nginx:
+    image: nginx:1.25-alpine
+    container_name: calculator-nginx
+    
+    # Nginx config is mounted from our local file
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+
+    # Expose port 80 to the host — this is the public-facing entry point
+    ports:
+      - "80:80"
+
+    # Wait for the calculator to be healthy before starting Nginx
+    depends_on:
+      calculator:
+        condition: service_healthy
+
+    # Restart policy
+    restart: unless-stopped
+
+    # Connect to the same network as the calculator
+    networks:
+      - calculator-network
+
+    # Health check for Nginx itself
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:80/health"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+
+# ─── Custom Bridge Network ────────────────────────────────────────────────────
+# Containers on the same network can communicate by service name (e.g. "calculator")
+# This isolates our stack from other Docker networks on the host
+networks:
+  calculator-network:
+    driver: bridge
+    name: spe-calculator-network
