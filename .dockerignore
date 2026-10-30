@@ -1,0 +1,32 @@
+# Files/dirs to EXCLUDE from Docker build context
+# This speeds up docker build by not sending unnecessary files to the daemon
+
+# Maven build output (the JAR is copied from the builder stage)
+target/
+
+# IDE files
+.idea/
+*.iml
+.eclipse/
+.settings/
+.project
+.classpath
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Git files (not needed inside the container)
+.git/
+.gitignore
+
+# Test reports (generated during build)
+target/surefire-reports/
+
+# Environment files (never copy secrets into Docker context!)
+.env
+*.env
+
+# Logs
+*.log
+logs/
