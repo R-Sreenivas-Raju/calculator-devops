@@ -15,8 +15,8 @@ pipeline {
 
     // ── Environment Variables ─────────────────────────────────────────────────
     environment {
-        // Docker Hub image name — change YOUR_DOCKERHUB_USERNAME to your actual username
-        DOCKER_IMAGE      = "YOUR_DOCKERHUB_USERNAME/calculator-api"
+        // Docker Hub image name — configured with your Docker Hub username
+        DOCKER_IMAGE      = "sreenivas20067/calculator-api"
         DOCKER_TAG        = "${BUILD_NUMBER}"   // e.g. "42" — unique per build
         DOCKER_FULL_IMAGE = "${DOCKER_IMAGE}:${DOCKER_TAG}"
         DOCKER_LATEST     = "${DOCKER_IMAGE}:latest"
@@ -26,7 +26,7 @@ pipeline {
         DOCKER_CREDENTIALS_ID = "dockerhub-credentials"
 
         // Student email for build notifications
-        STUDENT_EMAIL = "YOUR_EMAIL@example.com"
+        STUDENT_EMAIL = "Sreenivasa.Raju@iiitb.ac.in"
     }
 
     // ── Build Options ─────────────────────────────────────────────────────────

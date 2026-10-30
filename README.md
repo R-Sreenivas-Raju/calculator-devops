@@ -244,12 +244,12 @@ calculator-devops/
 
 ## 🐙 Docker Hub
 
-Image: `YOUR_DOCKERHUB_USERNAME/calculator-api`
+Image: `sreenivas20067/calculator-api`
 
 ```bash
 # Pull and run directly from Docker Hub
-docker pull YOUR_DOCKERHUB_USERNAME/calculator-api:latest
-docker run -p 8080:8080 YOUR_DOCKERHUB_USERNAME/calculator-api:latest
+docker pull sreenivas20067/calculator-api:latest
+docker run -p 8080:8080 sreenivas20067/calculator-api:latest
 ```
 
 ---
