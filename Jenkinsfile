@@ -162,14 +162,15 @@ pipeline {
                     sleep 30
                 """
 
-                // Verify deployment by hitting the health endpoint
+                // Verify deployment by hitting the health endpoint via the docker network or docker container
                 sh """
                     echo 'Verifying deployment health...'
-                    response=\$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/actuator/health)
-                    if [ "\$response" = "200" ]; then
-                        echo "Health check PASSED (HTTP \$response)"
+                    # Run healthcheck directly against calculator container
+                    docker exec calculator-api wget -q --spider http://localhost:8080/actuator/health
+                    if [ \$? -eq 0 ]; then
+                        echo "Health check PASSED (HTTP 200 via Actuator)"
                     else
-                        echo "Health check FAILED (HTTP \$response)"
+                        echo "Health check FAILED"
                         exit 1
                     fi
                 """
